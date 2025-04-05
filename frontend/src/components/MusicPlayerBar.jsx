@@ -282,7 +282,7 @@ export default function MusicPlayerBar({
           />
         <div>
           <h3 className="text-sm text-gray-500">ESL 52010</h3>
-          <p className="font-semibold">{audioTitle}</p>
+          <p className="font-semibold">{audioTitle.substring(0,50)}...</p>
         </div>
       </div>
       <div className="col-span-3">

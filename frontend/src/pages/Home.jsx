@@ -8,7 +8,7 @@ import FrontendDevImage from "../assets/frontend-dev.png"
 import DesignerImage from "../assets/designer.png"
 import MinutesEasy from "../assets/audio/MinutesEasy.mp3";
 import Test from "../assets/audio/30B30.mp3";
-
+import api from "../libs/axios"
 
 
 
@@ -196,15 +196,11 @@ export default function Home() {
     const [listPodcast, setListPodcast] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState(null)
+
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch("http://localhost:3000/api/v1/podcast/detail/67eece36680efa860fec586a", {
-                headers: {
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                    'x-client-id': '67ec271cb6baf44c0c5412e7'
-                }
-            })
-            const data = await response.json()
+            const response = await api.get("/podcast/detail/67eece36680efa860fec586a")
+            const {data} = response
             setData(data)
         }
         fetchData()
@@ -212,27 +208,14 @@ export default function Home() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch("http://localhost:3000/api/v1/podcast/list", {
-                headers: {
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                    'x-client-id': '67ec271cb6baf44c0c5412e7'
-                }
-            })
-            const data = await response.json()
-            console.log(data)
-            const { podcasts } = data
+            const response = await api.get("/podcast/list")
+            const { data:{podcasts} } = response
             setListPodcast(podcasts)
         }
 
         const fetchResult = async () => {
-            const response = await fetch("http://localhost:3000/api/v1/result/get/67ec9d1c124f7fe9d09b2fef", {
-                headers: {
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                    'x-client-id': '67ec271cb6baf44c0c5412e7'
-                }
-            })
-            const data = await response.json()
-            const {list_answers} = data
+            const response = await api.get("/result/get/67ec9d1c124f7fe9d09b2fef")
+            const {data:{list_answers}} = response
             setResult(list_answers)
         }
         fetchData()
@@ -469,7 +452,7 @@ export default function Home() {
                 <div className="mt-[40px] flex flex-wrap">
                     {
                         result?.map((item, index) => {
-                            const {timestamp,texts,idx_hidden,text} = item
+                            const {timestamp,texts,idx_hidden=[],text} = item
                             if (idx_hidden.length === 0) {
                                 return (
                                     <p className="text-white">

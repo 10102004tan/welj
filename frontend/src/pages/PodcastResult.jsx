@@ -34,12 +34,39 @@ export default function PodcastResult() {
         return <div>Loading...</div>
     }
 
-    // if (!result?.is_completed) {
-    //     window.location.href = '/podcasts/listen/' + podcastId
-    //     return <p>Loading...</p>
-    // }
+    const handleReplay = async() => {
+        const isSubmit = confirm("Bạn có chắc chắn muốn làm lại bài này không?")
+        if (!isSubmit) return
+
+        const response = await fetch("http://localhost:3000/api/v1/result/save", {
+            headers: {
+                'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
+                'x-client-id': '67ec271cb6baf44c0c5412e7',
+                'Content-Type': 'application/json'
+            },
+            method: "POST",
+            body: JSON.stringify({
+                list:[],
+                podcastId,
+                is_completed:false
+            })
+        })
+
+        const data = await response.json()
+        if (data) {
+            // redirect to podcast page
+            window.location.href = `/podcasts/listen/${podcastId}`
+        }
+    }
+   
     return (
-        <div className="grid grid-cols-2 gap-3">
+       <div>
+       <div className="mb-4 flex items-center gap-3">
+                <button onClick={handleReplay} className="py-2 px-[20px] rounded-full bg-red-600 text-white font-medium">
+                    Phục thù
+                </button>
+            </div>
+         <div className="grid grid-cols-2 gap-3">
             <ReadWithTimelight
             scripts={result}
             handleCurrentTime={(currentTime) => setCurrentTime(currentTime)}
@@ -117,8 +144,7 @@ export default function PodcastResult() {
                     }
                 </div>
             </div>
-
-            {/* <MusicPlayerBar audioSrc={audio} setCurrentTime={setCurrentTime} currentTime={currentTime}/> */}
         </div>
+       </div>
     );
 }

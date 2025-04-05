@@ -6,8 +6,6 @@ import { HeroUIProvider, ToastProvider } from '@heroui/react'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <HeroUIProvider>
-      <AppRouter/>
-    </HeroUIProvider>
+    <AppRouter/>
   </StrictMode>,
 )

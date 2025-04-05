@@ -85,12 +85,7 @@ export default function PodcastListen() {
 
         const data = await response.json()
         if (data) {
-            addToast({
-                title: "Thành công",
-                description: is_completed ? "Nộp bài thành công" : "Lưu tạm thành công",
-                color: "success",
-                timeout: 3000
-            })
+            window.location.href = `/results/${id}`
         }
     }
 
@@ -98,10 +93,6 @@ export default function PodcastListen() {
         return <div>Loading...</div>
     }
 
-    // if (data.is_completed && id) {
-    //     window.location.href = `/results/${data._id}`
-    //     return <div>Loading...</div>
-    // }
 
     return (
         <div>
