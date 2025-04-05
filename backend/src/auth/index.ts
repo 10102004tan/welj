@@ -32,11 +32,10 @@ class Authentication implements NestMiddleware {
         if (!this.apiKeyService){
             this.apiKeyService = this.moduleRef.get(ApiKeyService, { strict: false });
         }
-        const authorization = req.headers.authorization;
-        const clientId = req.headers['x-client-id'];
+        const authorization = req.headers.authorization || req.cookies.Authorization;
+        const clientId = req.headers['x-client-id'] || req.cookies['x-client-id'];
         if (!authorization || !clientId) {
             return res.status(401).json({ message: 'Unauthorized' });
-
         }
 
 
