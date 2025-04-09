@@ -18,7 +18,6 @@ export default function PodcastListen() {
             const { data } = response
             const newScript = data.scripts.map((script, index) => {
                 const { idx_hidden = [] } = script
-                
                 return {
                     ...script,
                     newIndex: idx_hidden.length !== 0 ? indexTemp++ : -1,
@@ -42,7 +41,6 @@ export default function PodcastListen() {
 
     const handleReview = async () => {
         try {
-            console.log("podcastId:", id)
             const response = await api.post("/podcast/review", {
                 list, podcastId: id
             })
@@ -68,22 +66,12 @@ export default function PodcastListen() {
         if (!result) {
             return
         }
-        const response = await fetch("http://localhost:3000/api/v1/result/save", {
-            headers: {
-                'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                'x-client-id': '67ec271cb6baf44c0c5412e7',
-                'Content-Type': 'application/json'
-            },
-            method: "POST",
-            body: JSON.stringify({
-                list,
+        const response = await api.post("/result/save", {
+            list,
                 podcastId: id,
                 is_completed
-            })
         })
-
-        const data = await response.json()
-        if (data) {
+        if (response.status === 201) {
             window.location.href = `/results/${id}`
         }
     }
@@ -150,7 +138,7 @@ export default function PodcastListen() {
                                                             console.log("Key 1, 2, 3 is disabled")
                                                             return;
                                                         }
-                                                        if (key === " ") {
+                                                        if (key === " " || key === "ArrowRight") {
                                                             e.preventDefault()
                                                             const nextIndex = idx < idx_hidden_length - 1 ? `${newIndex}:${idx + 1}` : `${newIndex + 1}:${0}`
                                                             if (!inputsRef.current[nextIndex]) {
@@ -158,18 +146,13 @@ export default function PodcastListen() {
                                                             }
                                                             inputsRef.current[nextIndex].focus()
                                                         }
-                                                        // if (key === "ArrowLeft") {
-                                                        //     const cursorPosition = e.target.selectionStart
-                                                        //     if (cursorPosition !== 0) return;
-                                                        //     let preIndex = idx !== 0 ? `${newIndex}:${idx - 1}` : `${newIndex - 1}:${idx_hidden_length - 1}`
-                                                        //     if (!inputsRef.current[preIndex]) {
-                                                        //         return
-                                                        //     }
-                                                        //     inputsRef.current[preIndex].focus()
-                                                        //     // const preInputLength = inputsRef.current[preIndex].value.length;
-                                                        //     // inputsRef.current[preIndex].setSelectionRange(preInputLength,preInputLength,"backward")
-                                                            
-                                                        // }
+                                                        if (key === "ArrowLeft") {
+                                                            const lengthPrevious = data.scripts.find((item) => item.newIndex === newIndex - 1)?.idx_hidden?.length || 1
+                                                            const preIndex = idx !== 0 ? `${newIndex}:${idx - 1}` : `${newIndex - 1}:${lengthPrevious - 1}`
+                                                            console.log("preIndex", preIndex)
+                                                            if (!inputsRef.current[preIndex]) return
+                                                            inputsRef.current[preIndex].focus()
+                                                        }
                                                     }} value={value} indexidx={indexIdxTemp} onChange={(e) => {
                                                         value = e.target.value
                                                         const indexScript = list.findIndex((item) => item.timestamp === timestamp)
