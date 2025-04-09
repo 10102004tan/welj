@@ -1,56 +1,52 @@
 import { addToast } from "@heroui/toast";
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useRef, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import MusicPlayerBar from "../components/MusicPlayerBar";
+import api from "../libs/axios"
 
 export default function PodcastListen() {
-    const {id} = useParams();
+    const { id } = useParams();
     const [data, setData] = useState();
     const [list, setList] = useState([])
-    
+    const inputsRef = useRef([]);
+
     useEffect(() => {
-            const fetchData = async () => {
-                const response = await fetch(`http://localhost:3000/api/v1/podcast/detail/${id}`, {
-                    headers: {
-                        'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                        'x-client-id': '67ec271cb6baf44c0c5412e7'
-                    },
-                })
-                const data = await response.json()
-                const {list_answers=[]} = data
-                setData(data)
-                // set list to list_answers
-                const listTemp = list_answers.map((item) => {
-                    return {
-                        timestamp: item.timestamp,
-                        texts: item.texts
-                    }
-                })
-                setList(listTemp)
-            }
-            if (id){
-                fetchData()
-            }
+        const fetchData = async () => {
+            const response = await api.get(`/podcast/detail/${id}`)
+            if (response.status !== 200) return
+            let indexTemp = 0;
+            const { data } = response
+            const newScript = data.scripts.map((script, index) => {
+                const { idx_hidden = [] } = script
+                
+                return {
+                    ...script,
+                    newIndex: idx_hidden.length !== 0 ? indexTemp++ : -1,
+                }
+            })
+            setData({ ...data, scripts: newScript })
+            const { list_answers = [] } = response.data
+            const listTemp = list_answers.map((item) => {
+                return {
+                    timestamp: item.timestamp,
+                    texts: item.texts
+                }
+            })
+            setList(listTemp)
+        }
+        if (id) {
+            fetchData()
+        }
     }, [id])
 
 
     const handleReview = async () => {
-        const response = await fetch("http://localhost:3000/api/v1/podcast/review", {
-            headers: {
-                'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                'x-client-id': '67ec271cb6baf44c0c5412e7',
-                'Content-Type': 'application/json'
-            },
-            method: "POST",
-            body: JSON.stringify({
-                list,
-                podcastId: "67ec9d1c124f7fe9d09b2fef",
+        try {
+            console.log("podcastId:", id)
+            const response = await api.post("/podcast/review", {
+                list, podcastId: id
             })
-        })
-
-        const data = await response.json()
-
-        if (data) {
+            const { data } = response
             const { percentReview } = data
             addToast({
                 title: "Thành công",
@@ -58,7 +54,10 @@ export default function PodcastListen() {
                 color: percentReview > 80 ? "success" : percentReview >= 50 ? "warning" : "danger",
                 timeout: 3000
             })
+        } catch (error) {
+            console.log("error", error)
         }
+
     }
 
     const handleSubmitResult = async ({
@@ -78,7 +77,7 @@ export default function PodcastListen() {
             method: "POST",
             body: JSON.stringify({
                 list,
-                podcastId:id,
+                podcastId: id,
                 is_completed
             })
         })
@@ -89,10 +88,10 @@ export default function PodcastListen() {
         }
     }
 
+
     if (!data) {
         return <div>Loading...</div>
     }
-
 
     return (
         <div>
@@ -104,7 +103,7 @@ export default function PodcastListen() {
                 <button onClick={handleReview} className="py-2 px-[20px] rounded-full border font-medium">
                     Thử kết quả
                 </button>
-                <button onClick={()=>handleSubmitResult({is_completed:false})} className="py-2 px-[20px] rounded-full border font-medium">
+                <button onClick={() => handleSubmitResult({ is_completed: false })} className="py-2 px-[20px] rounded-full border font-medium">
                     Lưu tạm
                 </button>
             </div>
@@ -113,7 +112,8 @@ export default function PodcastListen() {
                 <div className="col-span-2 bg-white p-4 rounded shadow">
                     {
                         data?.scripts.map((script, index) => {
-                            let { text, idx_hidden = [], timestamp } = script
+                            let { text, idx_hidden = [], timestamp, newIndex } = script
+                            // save index script have idx_hidden.length !== 0
                             let textTemp = text
                             idx_hidden.forEach((idx) => {
                                 const start = idx[0]
@@ -123,6 +123,7 @@ export default function PodcastListen() {
                             text = textTemp
                             const textArray = text.split("]");
                             let indexIdxTemp = -1;
+
                             return (
                                 <p key={index} className="inline-block">
                                     {
@@ -137,10 +138,39 @@ export default function PodcastListen() {
                                                     indexIdxTemp++
                                                 }
                                                 let value = list.find((item) => item.timestamp === timestamp)?.texts[indexIdxTemp] || ""
-
                                                 return <>
                                                     <span className="mr-1 mb-2">{text}</span>
-                                                    <input value={value} indexidx={indexIdxTemp} onChange={(e) => {
+                                                    <input ref={(el) => {
+                                                        return inputsRef.current[`${newIndex}:${idx}`] = el
+                                                    }} onKeyDown={(e) => {
+                                                        const key = e.key
+                                                        const idx_hidden_length = idx_hidden.length
+                                                        if (["1", "2", "3"].includes(key)) {
+                                                            e.preventDefault()
+                                                            console.log("Key 1, 2, 3 is disabled")
+                                                            return;
+                                                        }
+                                                        if (key === " ") {
+                                                            e.preventDefault()
+                                                            const nextIndex = idx < idx_hidden_length - 1 ? `${newIndex}:${idx + 1}` : `${newIndex + 1}:${0}`
+                                                            if (!inputsRef.current[nextIndex]) {
+                                                                return
+                                                            }
+                                                            inputsRef.current[nextIndex].focus()
+                                                        }
+                                                        // if (key === "ArrowLeft") {
+                                                        //     const cursorPosition = e.target.selectionStart
+                                                        //     if (cursorPosition !== 0) return;
+                                                        //     let preIndex = idx !== 0 ? `${newIndex}:${idx - 1}` : `${newIndex - 1}:${idx_hidden_length - 1}`
+                                                        //     if (!inputsRef.current[preIndex]) {
+                                                        //         return
+                                                        //     }
+                                                        //     inputsRef.current[preIndex].focus()
+                                                        //     // const preInputLength = inputsRef.current[preIndex].value.length;
+                                                        //     // inputsRef.current[preIndex].setSelectionRange(preInputLength,preInputLength,"backward")
+                                                            
+                                                        // }
+                                                    }} value={value} indexidx={indexIdxTemp} onChange={(e) => {
                                                         value = e.target.value
                                                         const indexScript = list.findIndex((item) => item.timestamp === timestamp)
                                                         const indexIdx = e.target.getAttribute("indexidx") || 0
@@ -190,7 +220,7 @@ export default function PodcastListen() {
                     </ul>
                 </div>
             </div>
-            <MusicPlayerBar audioCover={data?.thumbnail} audioTitle={data?.title} audioSrc={data?.audio_url}/>
+            <MusicPlayerBar audioCover={data?.thumbnail} audioTitle={data?.title} audioSrc={data?.audio_url} />
         </div>
     )
 }

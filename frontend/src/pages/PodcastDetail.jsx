@@ -1,6 +1,7 @@
 import { Avatar, Button, Image } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import api from "../libs/axios";
 
 export default function PodcastDetail() {
 
@@ -9,17 +10,12 @@ export default function PodcastDetail() {
     const [data, setData] = useState();
     useEffect(() => {
         const fetchData = async () => {
-            const response = await fetch(`http://localhost:3000/api/v1/podcast/detail/${id}`, {
-                headers: {
-                    'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                    'x-client-id': '67ec271cb6baf44c0c5412e7'
-                }
-            })
-            const data = await response.json()
+            const response = await api.get(`/podcast/detail/${id}`)
+            const {data} = response
             setData(data)
         }
         if (id) {
-            fetchData()
+           fetchData()
         }
     }, [id])
     if (!data) {
