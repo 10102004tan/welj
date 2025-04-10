@@ -9,9 +9,9 @@ export const createModelGemini = ({
     modelName: string,
     schemaModel: any,
 }) => {
-    const genAI = new GoogleGenerativeAI(process.env.API_KEY || 'AIzaSyDCIBynIZgNkeOSPlUomX-gElrRR3xcoA0');
+    const genAI = new GoogleGenerativeAI(process.env.API_KEY || 'AIzaSyC6SxnWjRJayOhpok3nHpfBnw6pA0O2Jrw');
     const model = genAI.getGenerativeModel({
-        model: modelName || "gemini-2.5-pro-exp-03-25",
+        model: modelName || "gemini-1.5-flash",// "gemini-2.5-pro-exp-03-25"
         generationConfig: {
             responseMimeType: 'application/json',
             responseSchema: schemaModel,

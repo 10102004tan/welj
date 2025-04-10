@@ -1,9 +1,16 @@
-import { Module } from "@nestjs/common";
+import { MiddlewareConsumer, Module, NestModule } from "@nestjs/common";
 import { GeminiService } from "./gemini.service";
 import { GeminiController } from "./gemini.controller";
+import { Authentication } from "src/auth";
+import { RbacModule } from "../rbac/rbac.module";
 
 @Module({
+    imports:[RbacModule],
     providers: [GeminiService],
     controllers: [GeminiController],
 })
-export class GeminiModule{}
+export class GeminiModule implements NestModule{
+    configure(consumer: MiddlewareConsumer) {
+        consumer.apply(Authentication).forRoutes(GeminiController);
+    }
+}

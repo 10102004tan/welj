@@ -107,7 +107,6 @@ export class PodcastService {
      */
     review = async (payload: any) => {
         const { list, podcastId } = payload;
-
         const podcast = await this.podcastModel.findById(podcastId);
 
         if (!podcast) {

@@ -6,8 +6,9 @@ import { PodcastModule } from './module/podcast/podcast.module';
 import { ResultModule } from './module/result/result.module';
 import { YoutubeModule } from './module/youtube/youtube.module';
 import { GeminiModule } from './module/gemini/gemini.module';
+import { RbacModule } from './module/rbac/rbac.module';
 
 @Module({
-  imports: [MongodbModule,AccessModule,SystemModule,PodcastModule,ResultModule,YoutubeModule,GeminiModule],
+  imports: [MongodbModule,AccessModule,SystemModule,PodcastModule,ResultModule,YoutubeModule,GeminiModule,RbacModule],
 })
 export class AppModule {}

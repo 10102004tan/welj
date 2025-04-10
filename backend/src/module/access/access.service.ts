@@ -1,8 +1,10 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { UsersService } from '../user/users.service';
 import * as bcrypt from 'bcryptjs';
 import { ApiKeyService } from '../apiKey/apiKey.service';
 import { generateToken } from 'src/auth';
+import { RbacService } from '../rbac/rbac.service';
+import { UserRepo } from '../user/schemas/repo/user.repo';
 const {v4: uuidv4} = require('uuid')
 
 
@@ -11,7 +13,9 @@ export class AccessService {
 
     constructor(
         private readonly userService: UsersService,
-        private readonly apiKeyService:ApiKeyService
+        private readonly apiKeyService:ApiKeyService,
+        private readonly rbacService:RbacService,
+        private readonly userRepo:UserRepo,
     ) {}
     
 
@@ -26,11 +30,21 @@ export class AccessService {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = await this.userService.create({email, password:hashedPassword,fullname});
+        if (!hashedPassword) {
+            throw new BadRequestException('Password hashing failed');
+        }
+
+        // find role here
+        const role = await this.rbacService.getRoleBySlug("role002");
+        if (!role) {
+            throw new BadRequestException('create wrong account !!!');
+        }
+
+
+        const newUser = await this.userService.create({email, password:hashedPassword,fullname,user_role:role._id});
         if (!newUser) {
             throw new BadRequestException('User creation failed');
         }
-        
         // generate apiKey here
         const privateKey = await uuidv4();
         const publicKey = await uuidv4();
@@ -45,7 +59,7 @@ export class AccessService {
 
     async signIn(user: any) {
         const {email, password} = user;
-        const existingUser = await this.userService.findByEmail(email);
+        const existingUser = await this.userRepo.findUserByEmail({email, select:["email", "fullname", "password"]});
         if (!existingUser) {
             throw new BadRequestException('User not found');
         }
@@ -64,10 +78,13 @@ export class AccessService {
             throw new BadRequestException('Unauthorized');
         }
 
+        const {slug} = existingUser.user_role as any;
+
         // generate jwt token here
         const payload = {
             userId: existingUser._id,
             email: existingUser.email,
+            role:slug
         }
         const tokens = await generateToken({
             payload,
