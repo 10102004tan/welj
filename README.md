@@ -1,6 +1,6 @@
 WELJ - Ứng Dụng Nghe Chép Chính Tả
 WELJ là một ứng dụng web hỗ trợ người dùng luyện tập kỹ năng nghe và chép chính tả thông qua các bài hát hoặc đoạn audio. Người dùng có thể nghe và điền từ còn thiếu vào đoạn văn bản hiển thị trên màn hình.
-![Mô tả hình ảnh](images/podcast-result.png)
+![Mô tả hình ảnh](images/home.png)
 ![Mô tả hình ảnh](images/podcast-detail.png)
 ![Mô tả hình ảnh](images/podcast-listen.png)
 ![Mô tả hình ảnh](images/podcast-list.png)
