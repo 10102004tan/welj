@@ -13,21 +13,8 @@ import Protected from '../pages/Protected';
 
 export default function AppRouter() {
 
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    const checkAuthentication =async () => {
-      setIsLoading(true);
-      try {
-        await checkAuth();
-        setIsAuthenticated(true);
-      } catch (error) {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuthentication();
-  },[]);
   return (
     <div>
       <Router>
@@ -35,15 +22,50 @@ export default function AppRouter() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
-            <Route path="/protected" element={isAuthenticated ? <Protected /> : <Navigate to={"/login"}/>} />
-            <Route path="/login" element={isAuthenticated ? <Navigate to={"/protected"}/>: <Login />} />
-            <Route path="/podcasts/:id" element={<PodcastDetail />} />
-            <Route path="/results/:podcastId" element={<PodcastResult />} />
-            <Route path="/podcasts/listen/:id" element={<PodcastListen />} />
+            <Route path='/protected' element={<ProtectedRoute>
+              <Protected />
+            </ProtectedRoute>} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/podcasts/:id" element={<ProtectedRoute>
+              <PodcastDetail />
+            </ProtectedRoute>} />
+            <Route path="/results/:podcastId" element={<ProtectedRoute>
+              <PodcastResult />
+            </ProtectedRoute>} />
+            <Route path="/podcasts/listen/:id" element={<ProtectedRoute>
+              <PodcastListen />
+            </ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </MainLayout>
       </Router>
     </div>
   );
+}
+
+const  ProtectedRoute = ({ children })=> {
+  const [isAuthenticated, setIsAuthenticated] = useState(null); // null = loading
+
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      try {
+        await checkAuth();
+        setIsAuthenticated(true);
+      } catch (error) {
+        setIsAuthenticated(false);
+      }
+    };
+
+    checkAuthentication();
+  }, []);
+
+  if (isAuthenticated === null) {
+    return <div>Loading...</div>;
+  }
+
+  if (isAuthenticated) {
+    return children;
+  }
+
+  return <Navigate to="/login" />;
 }
