@@ -30,6 +30,8 @@ export class CookieService {
   }
 
   clearAuthCookie(res: Response) {
-    res.clearCookie('auth_token');
+    res.clearCookie('Authorization');
+    res.clearCookie('x-refresh-token');
+    res.clearCookie('x-client-id');
   }
 }

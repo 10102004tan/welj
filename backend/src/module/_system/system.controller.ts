@@ -3,7 +3,6 @@ import { Body, Controller, Get, Post, UsePipes, ValidationPipe } from '@nestjs/c
 @Controller('auth')
 export class SystemController {
 
-
     @Get('health-check')
     heathCheck() {
         return { message: 'ok' };

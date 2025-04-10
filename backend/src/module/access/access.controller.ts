@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Request, Res, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AccessService } from './access.service';
 import { CookieService } from '../cookie/cookie.service';
 import { Response } from 'express';
@@ -16,7 +16,6 @@ export class AccessController {
         const { accessToken, user:{id} ,refreshToken} = data as any;
         this.cookieService.setAuthCookie(response, { accessToken, id, refreshToken });
         return data;
-
     }
 
     @Post('sign-up')
@@ -24,8 +23,18 @@ export class AccessController {
         return this.accessService.signUp(body);
     }
 
+    @Post('logout')
+    async logout(@Request() req: any, @Res({ passthrough: true }) response: Response) {
+        this.cookieService.clearAuthCookie(response);
+        return {
+            message: 'Logged out successfully',
+            user: req.user,
+        }
+    }
+
+
     @Get('check-auth')
-    checkAuth() {
-        return { message: 'Authenticated' };
+    checkAuth(@Request() req:any) {
+        return { message: 'Authenticated', user: req.user };
     }
 }

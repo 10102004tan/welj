@@ -18,3 +18,12 @@ export const checkAuth = async () => {
     throw error.response?.data || { message: 'Lỗi không xác định' };
   }
 }
+
+export const logout = async () => {
+  try {
+    const response = await api.post('/auth/logout');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Lỗi không xác định' };
+  }
+}

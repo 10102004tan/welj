@@ -9,29 +9,40 @@ export class PodcastController {
     ){}
 
     @Post('create')
-    createPodcast(@Body() payload:any,@Request() req:any) {
+    async createPodcast(@Body() payload:any,@Request() req:any) {
         return this.podcastService.create({...payload, authorId:req.user.userId})
     }
 
     @Get('list')
-    getListPodcast(@Query() query:any,@Request() req:any) {
-        return this.podcastService.findAll({...query, authorId:req.user.userId})
+    async getListPodcast(@Query() query:any,@Request() req:any) {
+        return this.podcastService.findAll({...query})
     }
 
     @Post('update')
-    updatePodcast(@Body() payload:any,@Request() req:any) {
+    async updatePodcast(@Body() payload:any,@Request() req:any) {
         return this.podcastService.update({...payload, authorId:req.user.userId})
     }
 
     @Post('review')
-    reviewPodcast(@Body() payload:any,@Request() req:any) {
+    async reviewPodcast(@Body() payload:any,@Request() req:any) {
         return this.podcastService.review({...payload})
     }
 
     @Get('detail/:id')
-    getDetailPodcast(@Query() query:any,@Request() req:any,@Param('id') id:string) {
-        return this.podcastService.findOne({...query, userId:req.user.userId, id})
+    async getDetailPodcast(@Request() req:any,@Param('id') id:string) {
+        const payload = {id,userId:req?.user.userId}
+        return this.podcastService.findOne(payload)
     }
 
+    @Get('listen/:id')
+    async getListenPodcast(@Request() req:any,@Param('id') id:string) {
+        const payload = {id,userId:req?.user.userId}
+        return this.podcastService.findOne(payload)
+    }
+
+    @Get('recent')
+    async getRecentPodcast(@Query() query:any,@Request() req:any) {
+        return await this.podcastService.recent({...query, userId:req.user.userId})
+    }
 
 }

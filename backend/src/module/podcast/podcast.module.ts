@@ -16,6 +16,6 @@ import { ResultModule } from '../result/result.module';
 })
 export class PodcastModule implements NestModule{
   configure(consumer: MiddlewareConsumer) {
-      consumer.apply(Authentication).forRoutes(PodcastController);
+      consumer.apply(Authentication).forRoutes("podcast/create","podcast/update","podcast/review","podcast/recent","podcast/listen/:id");
   }
 }

@@ -9,15 +9,13 @@ import DesignerImage from "../assets/designer.png"
 import MinutesEasy from "../assets/audio/MinutesEasy.mp3";
 import Test from "../assets/audio/30B30.mp3";
 import api from "../libs/axios"
+import { getPodcastRecent } from "../services/podcastService"
 
 
 
 import {
     Modal,
     ModalContent,
-    ModalHeader,
-    ModalBody,
-    ModalFooter,
     Button,
     Card,
     CardHeader,
@@ -27,6 +25,7 @@ import {
 } from "@heroui/react";
 
 import React from "react";
+import CardPodcast from "../components/CardPodcast";
 
 export const HeartIcon = ({
     size = 24,
@@ -196,30 +195,40 @@ export default function Home() {
     const [listPodcast, setListPodcast] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState(null)
+    const [podcastRecent, setPodcastRecent] = useState([])
 
     useEffect(() => {
         const fetchData = async () => {
             const response = await api.get("/podcast/detail/67eece36680efa860fec586a")
-            const {data} = response
+            const { data } = response
             setData(data)
         }
         fetchData()
+
     }, [])
 
     useEffect(() => {
         const fetchData = async () => {
             const response = await api.get("/podcast/list")
-            const { data:{podcasts} } = response
+            const { data: { podcasts } } = response
             setListPodcast(podcasts)
         }
 
         const fetchResult = async () => {
             const response = await api.get("/result/get/67ec9d1c124f7fe9d09b2fef")
-            const {data:{list_answers}} = response
+            const { data: { list_answers } } = response
             setResult(list_answers)
+        }
+        const fetchPodcastRecent = async () => {
+            const data = await getPodcastRecent({
+                page: 1,
+                limit: 4,
+            })
+            setPodcastRecent(data)
         }
         fetchData()
         fetchResult()
+        fetchPodcastRecent()
     }, [])
 
 
@@ -276,7 +285,7 @@ export default function Home() {
 
 
 
-    const HighlightMultipleRanges = ({ text, ranges, timestamp = "",texts=[] }) => {
+    const HighlightMultipleRanges = ({ text, ranges, timestamp = "", texts = [] }) => {
         let highlightedText = [];
         let lastIndex = 0;
         ranges.forEach(([start, end], index) => {
@@ -312,463 +321,102 @@ export default function Home() {
         return <p onMouseUp={handleTextHighlight}>{highlightedText}</p>;
     };
 
-    const handleHighlight = () => {
-        if (!tempHighlight) return
-        const { start, end, timestamp } = tempHighlight
-
-
-        setData((prev) => {
-            const newScripts = prev.scripts.map((item) => {
-                const { idx_hidden = [] } = item
-                if (item.timestamp === timestamp) {
-                    const idxHidden = [...idx_hidden, [start, end]]
-                    return { ...item, idx_hidden: idxHidden }
-                }
-                return item
-            })
-            return { ...prev, scripts: newScripts }
-        })
-        setTempHighlight(null)
-    }
 
     return (
         <>
-            {/* input content */}
-            <div className="mb-4 flex items-center gap-3">
-                <button className="py-2 px-[20px] rounded-full bg-red-600 text-white font-medium">
-                    Nộp bài
-                    (+ 1)
-                </button>
-                <button onClick={handleReview} className="py-2 px-[20px] rounded-full border font-medium">
-                    Thử kết quả
-                </button>
-            </div>
-            <div className="grid grid-cols-3 gap-4">
-                {/* col-span 2 */}
-                <div className="col-span-2 bg-white p-4 rounded shadow">
-                    {
-                        data?.scripts.map((script, index) => {
-                            let { text, idx_hidden = [], timestamp } = script
-                            let textTemp = text
-                            idx_hidden.forEach((idx) => {
-                                const start = idx[0]
-                                const end = idx[1]
-                                console.log("start", start, "end", end)
-                                console.log("text", text, "text.slice(start, end))", text.slice(start, end))
-                                textTemp = textTemp.replace(text.slice(start, end), `[${end - start}]`)
-                            })
-                            text = textTemp
-                            const textArray = text.split("]");
-                            let indexIdxTemp = -1;
-                            return (
-                                <p key={index} className="inline-block">
-                                    {
-                                        // [0[5
-                                        textArray.map((item, idx) => {
-                                            if (item.includes("[")) {
-                                                const itemArray = item.split("[");
-                                                const text = itemArray[0]
-                                                const length = parseInt(itemArray[1], 10)
-                                                if (indexIdxTemp === idx_hidden.length - 1) {
-                                                    indexIdxTemp = -1
-                                                } else {
-                                                    indexIdxTemp++
-                                                }
 
-                                                return <>
-                                                    <span className="mr-1 mb-2">{text}</span>
-                                                    <input indexidx={indexIdxTemp} onChange={(e) => {
-                                                        const value = e.target.value
-                                                        const indexScript = list.findIndex((item) => item.timestamp === timestamp)
-                                                        const indexIdx = e.target.getAttribute("indexidx") || 0
-                                                        if (indexScript === -1) {
-                                                            // Khai báo 1 mảng có length phần tử
-                                                            const texts = Array(idx_hidden.length).fill("")
-                                                            texts[indexIdx] = value
-                                                            setList([...list, { timestamp, texts }])
-                                                        } else {
-                                                            const texts = [...list[indexScript].texts]
-                                                            texts[indexIdx] = value
-                                                            const newList = [...list]
-                                                            newList[indexScript].texts = texts
-                                                            setList(newList)
-                                                        }
-
-                                                    }} maxLength={length} key={idx} type="text" style={{ width: `${length * 14}px` }} className={`bg-green-200 rounded-sm outline-none mr-1 mb-2`} />
-                                                </>
-                                            }
-                                            return <span className="mr-1 mb-2" key={idx}>{item}</span>
-                                        })
-                                    }
-                                </p>
-                            )
-                        })
-                    }
-                </div>
-                {/* col-span 1 */}
-                <div className="bg-white p-4">
-                    <h2 className="text-lg font-semibold mb-4">Phím tắt điều khiển mp3</h2>
-                    <ul className="space-y-2">
-                        <li className="p-2 rounded flex items-center gap-2">
-                            <span className="w-[30px] h-[30px] flex items-center justify-center border rounded-lg">1</span>
-                            <span>Nghe / Tạm dừng</span>
-                        </li>
-                        <li className="p-2 rounded flex items-center gap-2">
-                            <span className="w-[30px] h-[30px] flex items-center justify-center border rounded-lg">2</span>
-                            <span>Tua lại</span>
-                        </li>
-                        <li className="p-2 rounded flex items-center gap-2">
-                            <span className="w-[30px] h-[30px] flex items-center justify-center border rounded-lg">3</span>
-                            <span>Tua đi</span>
-                        </li>
-                        <li className="p-2 rounded flex items-center gap-2">
-                            Thời gian tua  <span className="w-[30px] h-[30px] flex items-center justify-center border rounded-lg">5</span> giây
-                        </li>
-                    </ul>
-                </div>
-            </div>
-
-
-            {/* component xem đáp án */}
-            <div className="mt-5 bg-gradient-to-tr from-[#000851] to-[#1CB5E0] p-4 rounded">
-                <h2 className="text-lg font-semibold mb-4 mt-5 text-white">Xem đáp án</h2>
-                <div className="mt-2 flex gap-2 items-center">
-                    <p className="text-gray-300">Giải thích</p>
-                    <ul className="mt-3 flex gap-3">
-                        <li className="flex gap-2 items-center">
-                            <div className="w-[70px] h-[25px] rounded bg-green-500"></div>
-                            <span className="text-xs text-gray-400">Câu trả lời đúng</span>
-                        </li>
-                        <li className="flex gap-2 items-center">
-                            <div className="w-[70px] h-[25px] rounded bg-red-500"></div>
-                            <span className="text-xs text-gray-400">Câu trả lời sai</span>
-                        </li>
-                        <li className="flex gap-2 items-center">
-                            <div className="w-[70px] h-[25px] rounded bg-orange-500"></div>
-                            <span className="text-xs text-gray-400">Chưa trả lời</span>
-                        </li>
-                    </ul>
-                </div>
-                <div className="mt-[40px] flex flex-wrap">
-                    {
-                        result?.map((item, index) => {
-                            const {timestamp,texts,idx_hidden=[],text} = item
-                            if (idx_hidden.length === 0) {
-                                return (
-                                    <p className="text-white">
-                                        {text}
-                                    </p>
-                                )
-                            }
-                            let lastIndex = 0
-                            let highlightedText = []
-                            idx_hidden.forEach((idx,index) => {
-                                const [start, end] = idx
-                                if (lastIndex < start) {
-                                    highlightedText.push(text.slice(lastIndex, start))
-                                }
-
-                                const isCorrect = texts[index] === text.slice(start, end);
-                                if (isCorrect){
-                                    highlightedText.push(
-                                        <span className={`px-2 py-1 cursor-pointer bg-green-500 rounded-sm mr-3 ${isCorrect}`} key={index}>
-                                            {text.slice(start, end)}
-                                        </span>
+            <div className="grid grid-cols-12 gap-4 mb-4">
+                <div className="col-span-8 pr-5 border-r-1">
+                    <div className="relative rounded-lg h-[400px] w-full overflow-hidden mb-5">
+                        <Image
+                            src={data?.image || ProductManager}
+                            alt=""
+                            className="w-full h-full object-cover rounded-lg"
+                        />
+                        <div className="absolute flex flex-col justify-between items-start p-4 top-0 left-0 right-0 bottom-0 z-10">
+                            <div>
+                                <h2 className="text-white text-4xl font-semibold mb-5">Chuyến phiêu lưu của WELE the Wallaby</h2>
+                                <p className="text-white mb-5">Chuyến phiêu lưu của WELE the Wallaby với 8 episodes kể về hành trình của WELE từ Việt Nam qua Lào, Campuchia, Thái Lan, Malaysia, Singapore, Indonesia rồi trở về Úc. Câu chuyện gửi gắm nhiều bài học ý nghĩa, phù hợp với tất cả các lứa tuổi, đặc biệt là thiếu nhi.</p>
+                            </div>
+                            <Link className="px-5 py-2 rounded bg-white text-[#b2ad64]" to="/">
+                                Tìm hiểu thêm
+                            </Link>
+                        </div>
+                    </div>
+                    {/* podcast recent */}
+                    <div className="mb-4">
+                        <h2 className="text-lg font-semibold mb-4">Nghe gần đây</h2>
+                        <div className="grid grid-cols-2 gap-4">
+                            {
+                                podcastRecent.map((item, index) => {
+                                    return (
+                                        <CardPodcast podcast={item} key={index} />
                                     )
-                                }else{
-                                    const element = texts[index] ? <p className="inline-block" key={index}>
-                                        <span className="px-2 py-1 cursor-pointer line-through bg-red-500 rounded-sm mr-3">{texts[index]}</span>
-                                        <span className="px-2 py-1 cursor-pointer bg-green-500 rounded-sm mr-3">{text.slice(start, end)}</span>
-                                    </p> : <span className="px-2 py-1 cursor-pointer bg-orange-500 rounded-sm mr-3">{text.slice(start, end)}</span>
-
-                                    highlightedText.push(element)
-                                }
-                                lastIndex = end
-                            })
-
-                            if (lastIndex < text.length) {
-                                highlightedText.push(text.slice(lastIndex))
+                                })
                             }
-                           
-                            return (
-                                <p className="text-white my-2" key={index}>
-                                    {
-                                        highlightedText.map((item, idx) => {
-                                            return <span key={idx}>{item}</span>
-                                        })
-                                    }
-                                </p>
-                            )
-                        })
-                    }
+                        </div>
+                    </div>
+
+                    {/* component Nguồn */}
+                    <div className="mt-5 p-4 rounded">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-lg font-semibold mb-4">Nguồn</h2>
+                            <Link to={("/")} className="text-gray-700">
+                                <span>Xem thêm</span>
+                            </Link>
+                        </div>
+
+
+                        <div className="grid grid-cols-4 gap-3">
+                            {
+                                Array(8).fill(0).map((_, index) => {
+                                    return (
+                                        <Link to={'/'} className="font-semibold backdrop-blur-md px-3 py-[30px] text-center rounded border shadow" key={index}>
+                                            6 Minutes English
+                                        </Link>
+                                    )
+                                })
+                            }
+                        </div>
+                    </div>
                 </div>
-            </div>
-
-            {/* component đọc theo câu timelight*/}
-            <ReadWithTimelight scripts={data?.scripts} srcAudio={data?.audio_url} />
-
-
-
-            {/* component list podcast */}
-            <div className="mt-5 bg-gradient-to-tr from-[#FFB457] to-[#FF705B] p-4 rounded">
-                <h2 className="text-lg font-semibold mb-4">Danh sách podcast</h2>
-                <div className="grid grid-cols-3 gap-4">
-                    {
-                        listPodcast?.map((item, index) => {
-                            const { title, published_at, thumbnail, description, authorId: { fullname, email } } = item
-                            return (
-                                <Card
-                                    isBlurred
-                                    className="border-none bg-background/60"
-                                    shadow="sm"
-                                >
-                                    <CardBody>
-                                        <div className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center">
-                                            <div className="relative col-span-6 md:col-span-4">
-                                                <img
-                                                    className="w-full h-full object-cover rounded-md"
-                                                    src={thumbnail}
-                                                    alt="Album cover"
-                                                />
-                                            </div>
-
-                                            <div className="flex flex-col col-span-6 md:col-span-8">
-                                                <div className="flex justify-between items-start">
-                                                    <div className="flex flex-col gap-0">
-                                                        <Link to={`/podcasts/${item._id}`} className="text-foreground/90 hover:text-foreground/100 transition-all duration-200 ease-in-out">
-                                                            <h3 className="font-semibold text-foreground/90">{title}</h3>
-                                                        </Link>
-                                                        <p className="text-sm font-medium mt-2">{description.substring(0,100)}...</p>
-                                                        <div className="text-small text-foreground/80 flex items-center gap-2 mt-2">
-                                                            <Avatar
-                                                                alt="Avatar"
-                                                                className="object-cover"
-                                                                size="sm"
-                                                                src={thumbnail}
-                                                                title="Avatar"
-                                                            />
-                                                            <div>
-                                                                <h4 className="font-semibold text-sm text-foreground/90">{fullname}</h4>
-                                                                <h5 className="text-sm">{email}</h5>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        isIconOnly
-                                                        className="text-default-900/60 data-[hover]:bg-foreground/10 -translate-y-2 translate-x-2"
-                                                        radius="full"
-                                                        variant="light"
-                                                        onPress={() => setLiked((v) => !v)}
-                                                    >
-                                                        {/* <HeartIcon
-                                                            className={liked ? "[&>path]:stroke-transparent" : ""}
-                                                            fill={liked ? "currentColor" : "none"}
-                                                        /> */}
-                                                    </Button>
+                <div className="col-span-4 ms-5">
+                    <div className="mb-5">
+                        <h2 className="text-lg font-semibold mb-4">Bảng tin</h2>
+                        <div>
+                            {
+                                Array(6).fill(0).map((item, index) => {
+                                    return (
+                                        <div className="rounded bg-white shadow flex gap-2 p-2 mb-3">
+                                            <Avatar src={FrontendDevImage} size="sm" className="rounded-full" />
+                                            <div className="w-full">
+                                                <div className="flex items-center gap-1"><h5>Nguyen Phuong Tan</h5> | <span className="text-xs">Vài giây trước</span></div>
+                                                <div className="flex gap-2 items-center">
+                                                    <span className="text-lg text-green-400">Bắt đầu nghe</span>
+                                                    <h5>To do English</h5>
                                                 </div>
                                             </div>
                                         </div>
-                                    </CardBody>
-                                </Card>
-                            )
-                        })
-                    }
-                </div>
-            </div>
-
-
-            {/* component edit podcast */}
-            <div className="mt-5 bg-gradient-to-tr from-[#FFB457] to-[#FF705B] p-4 rounded">
-                <h2 className="text-lg font-semibold mb-4">Chỉnh sửa podcast scripts</h2>
-                <div className="h-full relative overflow-y-auto p-5">
-                    {
-                        data?.scripts.map((script, index) => {
-                            const { text, timestamp, idx_hidden = [] } = script
-                            return <div data-timestamp={timestamp} key={index} className="flex gap-2 mb-3">
-                                <span className="px-2 py-1 bg-white/75 rounded inline-block">{timestamp}</span> :
-                                <HighlightMultipleRanges timestamp={timestamp} text={text} ranges={idx_hidden} />
-                            </div>
-                        })
-                    }
-
-                    {/* <div style={{
-                        left: possition.x,
-                        top: possition.y,
-                        transition: "all 0.3s ease-in-out",
-                        display: isMouseUp ? "flex" : "none",
-                    }} className="absolute z-[999] gap-2 bg-white px-3 py-1 shadow">
-                        <Button className="text-sm" onPress={handleHighlight}>
-                            Đánh dấu
-                        </Button>
-                        <Button className="text-sm bg-red-600 text-white" onPress={handleHighlight}>
-                            Bỏ đánh dấu
-                        </Button>
-                    </div> */}
-                </div>
-            </div>
-
-
-            {/* component Nguồn */}
-            <div className="mt-5 bg-gradient-to-tr from-[#FFB457] to-[#FF705B] p-4 rounded">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-lg font-semibold mb-4">Nguồn</h2>
-                    <Link to={("/")} className="text-gray-700">
-                        <span>Xem thêm</span>
-                    </Link>
-                </div>
-
-                <div className="grid grid-cols-4 gap-3">
-                    {
-                        Array(8).fill(0).map((_, index) => {
-                            return (
-                                <Link to={'/'} className="bg-white/30 font-semibold backdrop-blur-md px-3 py-[30px] text-center rounded shadow-sm" key={index}>
-                                    6 Minutes English
-                                </Link>
-                            )
-                        })
-                    }
-                </div>
-            </div>
-
-            {/* component thong tin tai khoan */}
-            <div className="mt-5 rounded bg-gray-100 p-4">
-                <h2 className="text-lg font-semibold mb-4">Thông tin tài khoản</h2>
-                <p>Cập nhật đầy đủ thông tin của bạn để có được sự hỗ trợ tốt nhất đến từ WELE bạn nhé.</p>
-
-                <div className="mt-5">
-                    <div className="flex items-center gap-2">
-                        <Image
-                            alt="Avatar"
-                            className="object-cover"
-                            height={80}
-                            shadow="md"
-                            width={80}
-                            src="https://images.unsplash.com/photo-1676142171955-3c2f1a0d9b4d?ixlib=rb-4.0.3&crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"
-                            title="Avatar"
-                            radius="full"
-                        />
-                        <Button className="text-sm bg-red-600 text-white rounded-3xl">
-                            Tải ảnh mới
-                        </Button>
+                                    )
+                                })
+                            }
+                        </div>
                     </div>
 
-                    {/* form */}
-                    <Form
-                        className="w-full max-w-xs flex flex-col gap-4 mt-3"
-                    >
-                        <Input
-                            isRequired
-                            errorMessage="Please enter a valid username"
-                            name="username"
-                            placeholder="Enter your username"
-                            type="text"
-                        />
-
-                        <Input
-                            isRequired
-                            errorMessage="Please enter a valid email"
-                            labelPlacement="outside"
-                            name="email"
-                            placeholder="Enter your email"
-                            type="email"
-                        />
-                        <div className="flex gap-2">
-                            <Button className="bg-red-600 text-white" type="submit">
-                                Submit
-                            </Button>
-                        </div>
-                    </Form>
-                </div>
-            </div>
-
-            {/* component podcast detail */}
-            <div className="mt-5 p-4">
-                <div className="grid grid-cols-12 gap-4">
-                    <div className="col-span-8">
-                        <h2 className="font-semibold text-2xl">E10: Choosing a film</h2>
-                        <p className="mt-4">
-                            Hello cả nhà, đây là đáp án của câu hỏi của tuần trước nhé:
-
-                            Which one of Michal's sentences is wrong?
-
-                            1: I'm going to see a film tonight.
-
-                            2: Will anyone like to come with me? – Would anyone like to come with me?
-
-                            3: Oh Helen, that's so kind of you.
-
-                            Hôm nay chúng ta sẽ tiếp tục series “The Flatmates” nha!
-
-                            Alice và Michal đã tới rạp chiếu phim. Cả hai người đang cân nhắc chọn phim để xem. Alice thì thích thể loại rom-com / romantic comedy ( hài kịch lãng mạn) và period drama ( những bộ phim lấy bối cảnh một giai đoạn lịch sử xác định ). Còn Michal thì lại thích sci-fi / science fiction (khoa học viễn tưởng), hoàn toàn không phải thể loại Alice thích (not really my thing ). Lúc này, Michal gợi ý phim kinh dị (horror films) và Alice tiếp tục từ chối vì cô cũng không thích thể loại này - (sth) doesn't do it for me. Hai người có vẻ không có sở thích xem phim giống nhau, nhưng cuối cùng thì Michal vẫn nhường Alice chọn thể loại phim cô thích.
-
-                            This episode's question:
-
-                            What kind of film should they see?
-
-                            1: rom-com
-
-                            2: sci-fi
-
-                            3: horror
-
-                            4: period drama
-
-                            Have fun learning English, guys!
-                        </p>
-                    </div>
-                    <div className="col-span-4">
-                        {/* button */}
-                        <div className="flex items-center gap-2">
-                            <Button className="bg-red-600 text-white px-[30px]">
-                                Tiếp tục nghe
-                            </Button>
-                        </div>
-
-                        <div className="p-3 rounded shadow bg-[#fff] mt-7">
-                            <Image
-                                alt="Album cover"
-                                className="object-cover cursor-pointer"
-                                height={400}
-                                shadow="md"
-                                src="https://images.unsplash.com/photo-1676142171955-3c2f1a0d9b4d?ixlib=rb-4.0.3&crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"
-                                width="100%"
-                            />
-
-
-                            {/* author */}
-                            <div className="flex items-center gap-4 mt-7 pb-5 border-b">
-                                <Avatar
-                                    alt="Avatar"
-                                    className="object-cover"
-                                    src="https://images.unsplash.com/photo-1676142171955-3c2f1a0d9b4d?ixlib=rb-4.0.3&crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=400"
-                                    title="Avatar"
-                                />
-                                <div>
-                                    <span className="text-gray-500 text-sm font-mono">Người đăng bài</span>
-                                    <h5 className="font-semibold">Vuong Thi Thuy Linh</h5>
-                                </div>
-                            </div>
-
-                            {/*  */}
-                            <div className="grid grid-cols-3 gap-4 mt-7 pb-5 border-b">
-                                <div className="col-span-1 w-full border-r">
-                                    <span className="text-gray-500 text-sm font-mono">Lượt nghe</span>
-                                    <h5 className="font-semibold">622</h5>
-                                </div>
-                                <div className="col-span-1 w-full border-r">
-                                    <span className="text-gray-500 text-sm font-mono">Nguồn</span>
-                                    <h5 className="font-semibold">The Flatmates</h5>
-                                </div>
-                                <div className="col-span-1 w-full border-r">
-                                    <span className="text-gray-500 text-sm font-mono">Ngày đăng</span>
-                                    <h5 className="font-semibold">01/04/2025</h5>
-                                </div>
-                            </div>
+                    <div className="mb-5">
+                        <h2 className="text-lg font-semibold mb-4">Nghe nhiều nhất</h2>
+                        <div className="grid gap-2">
+                            {
+                                podcastRecent.map((item, index) => {
+                                    return (
+                                        <CardPodcast podcast={item} key={index} />
+                                    )
+                                })
+                            }
                         </div>
                     </div>
                 </div>
             </div>
-
 
             {/* component out team */}
             <section className="mt-5 p-4">
@@ -818,90 +466,7 @@ export default function Home() {
                     </div>
                 </div>
             </section>
-
-
-            {/*  */}
-            <MusicPlayerBar audioSrc={data?.audio_url}/>
-
-            {/* modal */}
-            <Modal isOpen={isOpen} onClose={onClose}>
-                <ModalContent>
-                    <div className="h-full relative overflow-y-auto p-5">
-                        {
-                            data?.scripts.map((script, index) => {
-                                const { text, timestamp, idx_hidden = [] } = script
-                                return <div data-timestamp={timestamp} key={index} className="flex gap-2 mb-3">
-                                    <span>{timestamp} :</span>
-                                    <HighlightMultipleRanges timestamp={timestamp} text={text} ranges={idx_hidden} />
-                                </div>
-                            })
-                        }
-
-                        <div style={{
-                            left: possition.x,
-                            top: possition.y,
-                            transition: "all 0.3s ease-in-out",
-                            display: isMouseUp ? "flex" : "none",
-                        }} className="absolute z-[999] gap-2 bg-white px-3 py-1 shadow">
-                            <Button className="text-sm" onPress={handleHighlight}>
-                                Đánh dấu
-                            </Button>
-                            <Button className="text-sm bg-red-600 text-white" onPress={handleHighlight}>
-                                Bỏ đánh dấu
-                            </Button>
-                        </div>
-                    </div>
-                </ModalContent>
-            </Modal>
         </>
     )
 }
 
-const ReadWithTimelight = ({
-    scripts = [],
-    srcAudio = ""
-}) => {
-    // convert 00:00, to seconds
-    const audioRef = useRef(null);
-    const [currentTime, setCurrentTime] = useState(-1);
-    const convertToSeconds = (time) => {
-        const [minutes, seconds] = time.split(":").map(Number);
-        return minutes * 60 + seconds;
-    };
-    const handleRead = (timestamp) => {
-        const audio = audioRef.current;
-        if (audio) {
-            audio.currentTime = convertToSeconds(timestamp);
-            audio.play();
-        }
-    };
-
-    const handleTimeUpdate = () => {
-        if (audioRef.current) {
-            setCurrentTime(audioRef.current.currentTime);
-        }
-    };
-
-   /**
-    currentTime 20.807165 timestamp 186 nextTimstamp 191
-    */
-    return (
-        <div className="mt-5 bg-gradient-to-tr from-[#FFB457] to-[#FF705B] p-4 rounded">
-            <h2 className="text-lg font-semibold mb-4">Đọc theo</h2>
-            <audio onTimeUpdate={handleTimeUpdate} preload="metadata" className="hidden" ref={audioRef} src={srcAudio} />
-            <div className="flex flex-wrap">
-                {
-                    scripts.map((script, index) => {
-                        const { text, timestamp, idx_hidden = [] } = script
-                        const isActive = currentTime >= convertToSeconds(timestamp) && currentTime < convertToSeconds(scripts[index + 1]?.timestamp || "99:99")
-                        return (
-                            <p onClick={() => handleRead(timestamp)} className={`${isActive && "bg-white/70"} hover:bg-white/30 cursor-pointer rounded-sm mr-3 mb-3`} key={index}>
-                                {text}
-                            </p>
-                        )
-                    })
-                }
-            </div>
-        </div>
-    )
-}

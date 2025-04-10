@@ -12,7 +12,7 @@ export default function PodcastListen() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await api.get(`/podcast/detail/${id}`)
+            const response = await api.get(`/podcast/listen/${id}`)
             if (response.status !== 200) return
             let indexTemp = 0;
             const { data } = response
@@ -66,13 +66,27 @@ export default function PodcastListen() {
         if (!result) {
             return
         }
-        const response = await api.post("/result/save", {
-            list,
-                podcastId: id,
-                is_completed
-        })
-        if (response.status === 201) {
-            window.location.href = `/results/${id}`
+        try {
+            await api.post("/result/save", {
+                list,
+                    podcastId: id,
+                    is_completed
+            })
+            if (is_completed) {
+                window.location.href = `/results/${id}`
+            }else{
+                addToast({
+                    title: "Thành công",
+                    description: "Lưu tạm thành công",
+                    color: "success",
+                    timeout: 3000
+                })
+            }
+        } catch (error) {
+            addToast({
+                title: "Thất bại",
+                description: "Lưu tạm thất bại",
+            })
         }
     }
 

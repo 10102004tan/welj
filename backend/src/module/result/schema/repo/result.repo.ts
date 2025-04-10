@@ -24,4 +24,24 @@ export class ResultRepo {
         }).select(select?.join(' ')).lean()
         return result
     }
+
+    findResults = async ({
+        select=[],
+        userId,
+        limit=10,
+        page=1,
+    }:{
+        select: string[],
+        userId: string,
+        limit: number,
+        page: number,
+    }) => {
+        // get result recent
+        const skip = (page - 1) * limit;
+        const results = await this.resultModel.find({
+            userId,
+        }).select(select?.join(' ')).sort({ created_at: -1 }).skip(skip).limit(limit).lean()
+
+        return results
+    }
 }

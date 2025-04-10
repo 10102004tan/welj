@@ -38,10 +38,10 @@ export class PodcastService {
     }
 
     findAll = async (payload: any) => {
-        const { page = 1, limit = 15, authorId } = payload;
+        const { page = 1, limit = 15 } = payload;
         const skip = (page - 1) * limit;
-        const podcasts = await this.podcastModel.find({ authorId }).populate('authorId', 'fullname email').select("-__v -is_published -scripts -is_deleted -is_draft -created_at -updated_at").skip(skip).limit(limit).sort({ created_at: -1 }).lean();
-        const total = await this.podcastModel.countDocuments({ authorId });
+        const podcasts = await this.podcastModel.find({}).populate('authorId', 'fullname email').select("-__v -is_published -scripts -is_deleted -is_draft -created_at -updated_at").skip(skip).limit(limit).sort({ created_at: -1 }).lean();
+        const total = await this.podcastModel.countDocuments({});
         const totalPage = Math.ceil(total / limit);
         const hasNextPage = page < totalPage;
         const hasPrevPage = page > 1;
@@ -84,7 +84,10 @@ export class PodcastService {
         }
        
         // check is_completed in result
-        const isCompletedResult = await this.resultRepo.findResultOne({ podcastId: podcast._id as string,userId:userId, select: ['is_completed _id list_answers'] });
+        let isCompletedResult;
+        if (userId){
+            isCompletedResult = await this.resultRepo.findResultOne({ podcastId: podcast._id as string,userId:userId, select: ['is_completed _id list_answers'] });
+        }
         return {
             ...podcast.toObject(),
             is_completed: isCompletedResult?.is_completed || false,
@@ -182,5 +185,24 @@ export class PodcastService {
             total,
             totalReview: list.length,
         }
+    }
+
+
+    recent = async (payload: any) => {
+        const {page = 1, limit = 15,userId} = payload;
+        const resultsRecent = await this.resultRepo.findResults({
+            userId,
+            select: ['podcastId'],
+            limit,
+            page,
+        })
+
+        const podcasts = await this.podcastModel.find({
+            _id: { $in: resultsRecent.map((result:any) => result.podcastId) }
+        })
+        .populate('authorId', 'fullname email')
+        .select("-__v -is_published -scripts -is_deleted -is_draft -created_at -updated_at").lean()
+
+        return podcasts;
     }
 }

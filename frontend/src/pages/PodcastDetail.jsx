@@ -2,6 +2,7 @@ import { Avatar, Button, Image } from "@heroui/react";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import api from "../libs/axios";
+import AuthElement from "../components/AuthElement";
 
 export default function PodcastDetail() {
 
@@ -11,17 +12,17 @@ export default function PodcastDetail() {
     useEffect(() => {
         const fetchData = async () => {
             const response = await api.get(`/podcast/detail/${id}`)
-            const {data} = response
+            const { data } = response
             setData(data)
         }
         if (id) {
-           fetchData()
+            fetchData()
         }
     }, [id])
     if (!data) {
         return <div>Loading...</div>
     }
-    const { thumbnail, title, description, listen_count, published_at, authorId: { fullname }, is_completed, resultId ,_id} = data;
+    const { thumbnail, title, description, listen_count, published_at, authorId: { fullname }, is_completed, resultId, _id } = data;
     return (
         <div className="p-4">
             <div className="grid grid-cols-12 gap-4">
@@ -42,9 +43,11 @@ export default function PodcastDetail() {
                                     {
                                         resultId ? <Link to={`/podcasts/listen/${_id}`} className="bg-red-600 py-2 rounded-lg text-white px-[30px]">
                                             Tiếp túc nghe
-                                        </Link> : <Link to={`/podcasts/listen/${_id}`} className="bg-red-600 py-2 rounded-lg text-white px-[30px]">
-                                            Nghe ngay
-                                        </Link>
+                                        </Link> : <AuthElement>
+                                            <Link to={`/podcasts/listen/${_id}`} className="bg-red-600 py-2 rounded-lg text-white px-[30px]">
+                                                Nghe ngay
+                                            </Link>
+                                        </AuthElement>
                                     }
                                 </div>
                         }
