@@ -1,5 +1,7 @@
 import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { RbacService } from "./rbac.service";
+import { CreateRoleDto, UpdateRoleDto } from "./dto/role.dto";
+import { CreateResourceDto } from "./dto/create-resource.dto";
 
 @Controller("rbac")
 export class RbacController {
@@ -8,12 +10,12 @@ export class RbacController {
     ) {}
 
     @Post("role")
-    async createRole(@Body() payload: any) {
+    async createRole(@Body() payload: CreateRoleDto) {
         return await this.rbacService.createRole(payload);
     }
 
     @Post("resource")
-    async createResource(@Body() payload: any) {
+    async createResource(@Body() payload: CreateResourceDto) {
         return await this.rbacService.createResource(payload);
     }
 
@@ -28,7 +30,7 @@ export class RbacController {
     }
 
     @Put("role")
-    async updateRole(@Body() payload: any) {
+    async updateRole(@Body() payload: UpdateRoleDto) {
         return await this.rbacService.updateRole(payload);
     }
 }

@@ -2,6 +2,8 @@ import { Body, Controller, Get, Post, Req, Request, Res, UsePipes, ValidationPip
 import { AccessService } from './access.service';
 import { CookieService } from '../cookie/cookie.service';
 import { Response } from 'express';
+import { SignInDto } from './dto/sign-in.dto';
+import { SignUpDto } from './dto/sign-up.dto';
 
 @Controller('auth')
 export class AccessController {
@@ -11,7 +13,7 @@ export class AccessController {
     ) { }
 
     @Post('sign-in')
-    async signIn(@Body() body: any, @Res({ passthrough: true }) response: Response) {
+    async signIn(@Body() body: SignInDto, @Res({ passthrough: true }) response: Response) {
         const data = await this.accessService.signIn(body);
         const { accessToken, user:{id} ,refreshToken} = data as any;
         this.cookieService.setAuthCookie(response, { accessToken, id, refreshToken });
@@ -19,7 +21,7 @@ export class AccessController {
     }
 
     @Post('sign-up')
-    signUp(@Body() body: any) {
+    signUp(@Body() body: SignUpDto) {
         return this.accessService.signUp(body);
     }
 
