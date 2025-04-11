@@ -15,6 +15,8 @@ const ReadWithTimelight = ({
         const audio = audioRef.current;
         if (audio) {
             audio.currentTime = convertToSeconds(timestamp);
+            // console.log("currentTime", audio.currentTime)
+            // console.log("timestamp", convertToSeconds(timestamp))
             audio.play();
             handleCurrentTime(timestamp)
         }

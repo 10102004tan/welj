@@ -184,7 +184,7 @@ export default function PodcastListen() {
                                                             setList(newList)
                                                         }
 
-                                                    }} maxLength={length} key={idx} type="text" style={{ width: `${length * 14}px` }} className={`bg-green-200 rounded-sm outline-none mr-1 mb-2`} />
+                                                    }} maxLength={length} key={idx} type="text" style={{ width: `${length * (data.language && data.language === "ja" ? 14 : 8)}px` }} className={`bg-green-200 rounded-sm outline-none mr-1 mb-2`} />
                                                 </>
                                             }
                                             return <span className="mr-1 mb-2" key={idx}>{item}</span>

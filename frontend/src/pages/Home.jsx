@@ -9,7 +9,7 @@ import DesignerImage from "../assets/designer.png"
 import MinutesEasy from "../assets/audio/MinutesEasy.mp3";
 import Test from "../assets/audio/30B30.mp3";
 import api from "../libs/axios"
-import { getPodcastRecent } from "../services/podcastService"
+import { getAllPodcasts, getPodcastRecent } from "../services/podcastService"
 
 
 
@@ -184,14 +184,6 @@ export const ShuffleIcon = ({ size = 24, width, height, ...props }) => {
 export default function Home() {
 
     const [data, setData] = useState();
-    const [list, setList] = useState([])
-    const [isOpen, setIsOpen] = useState(false)
-    const [possition, setPosition] = useState({
-        x: 0,
-        y: 0
-    })
-    const [isMouseUp, setIsMouseUp] = useState(true)
-    const [tempHighlight, setTempHighlight] = useState(null)
     const [listPodcast, setListPodcast] = useState([])
     const [isLoading, setIsLoading] = useState(false)
     const [result, setResult] = useState(null)
@@ -199,18 +191,13 @@ export default function Home() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const response = await api.get("/podcast/detail/67eece36680efa860fec586a")
-            const { data } = response
-            setData(data)
-        }
-        fetchData()
-
-    }, [])
-
-    useEffect(() => {
-        const fetchData = async () => {
-            const response = await api.get("/podcast/list")
-            const { data: { podcasts } } = response
+            console.log("fetchData")
+            const data = await getAllPodcasts({
+                sortBy: "listen_count",
+                sortOrder: "desc",
+                limit: 4,
+            })
+            const { podcasts } = data
             setListPodcast(podcasts)
         }
 
@@ -226,101 +213,11 @@ export default function Home() {
             })
             setPodcastRecent(data)
         }
+
         fetchData()
         fetchResult()
         fetchPodcastRecent()
     }, [])
-
-
-
-    const handleReview = async () => {
-        const response = await fetch("http://localhost:3000/api/v1/podcast/review", {
-            headers: {
-                'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2N2VjMjcxY2I2YmFmNDRjMGM1NDEyZTciLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsImlhdCI6MTc0Mzc0ODAyOCwiZXhwIjoxNzQzOTIwODI4fQ.wgSAt8uxsjhUy9aml7K3sZjp1d7saU-6Ke4lR7L-Y40',
-                'x-client-id': '67ec271cb6baf44c0c5412e7',
-                'Content-Type': 'application/json'
-            },
-            method: "POST",
-            body: JSON.stringify({
-                list,
-                podcastId: "67ec9d1c124f7fe9d09b2fef",
-            })
-        })
-
-        const data = await response.json()
-
-        if (data) {
-            const { percentReview } = data
-            addToast({
-                title: "Thành công",
-                description: `Phần trăm câu trả lời đúng là ${data.percentReview}%`,
-                color: percentReview > 80 ? "success" : percentReview >= 50 ? "warning" : "danger",
-                timeout: 3000
-            })
-        }
-    }
-
-    const onClose = () => {
-        setIsOpen(false)
-    }
-
-
-    function handleTextHighlight(event) {
-        const selection = window.getSelection();
-        setIsMouseUp(true)
-        if (!selection.isCollapsed) {
-
-            const range = selection.getRangeAt(0);
-            const selectedNode = range.startContainer;
-
-            const pNode = selectedNode.parentNode
-
-
-            const timestamp = pNode.parentNode.getAttribute("data-timestamp")
-            const start = range.startOffset;
-            const end = range.endOffset;
-
-        }
-    }
-
-
-
-    const HighlightMultipleRanges = ({ text, ranges, timestamp = "", texts = [] }) => {
-        let highlightedText = [];
-        let lastIndex = 0;
-        ranges.forEach(([start, end], index) => {
-            if (lastIndex < start) {
-                highlightedText.push(text.slice(lastIndex, start));
-            }
-            highlightedText.push(
-                <span onClick={(event) => {
-                    event.stopPropagation()
-                    const { clientX, clientY } = event
-                    setPosition({
-                        x: clientX,
-                        y: clientY + 20
-                    })
-                    setTempHighlight({
-                        start,
-                        end,
-                        timestamp,
-                    })
-                    setIsMouseUp(true)
-                }} className="px-2 py-1 cursor-pointer bg-green-200 rounded-sm mr-3" key={index}>
-                    {text.slice(start, end)}
-                </span>
-            );
-
-            lastIndex = end;
-        });
-
-        if (lastIndex < text.length) {
-            highlightedText.push(text.slice(lastIndex))
-        }
-
-        return <p onMouseUp={handleTextHighlight}>{highlightedText}</p>;
-    };
-
 
     return (
         <>
@@ -407,7 +304,7 @@ export default function Home() {
                         <h2 className="text-lg font-semibold mb-4">Nghe nhiều nhất</h2>
                         <div className="grid gap-2">
                             {
-                                podcastRecent.map((item, index) => {
+                                listPodcast.map((item, index) => {
                                     return (
                                         <CardPodcast podcast={item} key={index} />
                                     )

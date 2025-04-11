@@ -9,9 +9,14 @@ const getPodcastDetails = async (podcastId) => {
     }
 }
 
-const getAllPodcasts = async () => {
+const getAllPodcasts = async ({
+    sortBy ="created_at",
+    sortOrder="asc",
+    limit=4,
+    page=1,
+}) => {
     try {
-        const response = await api.get('/podcast/list');
+        const response = await api.get(`/podcast/list?sortBy=${sortBy}&sortOrder=${sortOrder}&limit=${limit}&page=${page}`);
         return response.data;
     } catch (error) {
         throw error.response?.data || { message: 'Lỗi không xác định' };
@@ -33,8 +38,28 @@ const getPodcastRecent = async ({
     }
 }
 
+const updatePodcast = async (podcastId, data) => {
+    try {
+        const response = await api.put(`/podcast/update/${podcastId}`, data);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Lỗi không xác định' };
+    }
+}
+
+const getListPodcastV2 = async ({})=>{
+    try {
+        const response = await api.get('/podcast/listAny');
+        return response.data;
+    } catch (error) {
+        throw error.response?.data || { message: 'Lỗi không xác định' };
+    }
+}
+
 export {
     getPodcastDetails,
     getAllPodcasts,
     getPodcastRecent,
+    updatePodcast,
+    getListPodcastV2
 }

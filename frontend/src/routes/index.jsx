@@ -132,9 +132,8 @@ const ProtectedRoute = ({ children, isAdminRoute = false }) => {
   }
 
   if (isAuthenticated && isAdminRoute && userAuth.role !== "role001") {
-    return <div className='h-screen w-screen flex flex-col justify-center items-center'>
-      <h1 className='text-2xl font-bold text-center'>You are not authorized to access this page</h1>
-      <p className='text-center'>Please contact the administrator for more information.</p>
+    return <div className='h-screen w-screen flex flex-col bg-gray-800 text-gray-500 justify-center items-center'>
+      <h1 className='text-2xl text-center'>ACCESS DENIED</h1>
     </div>
   }
 

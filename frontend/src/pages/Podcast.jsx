@@ -20,7 +20,12 @@ const Podcast = () => {
     useState(() => {
         const fetchPodcasts = async () => {
             try {
-                const data = await getAllPodcasts()
+                const data = await getAllPodcasts({
+                    sortBy: "created_at",
+                    sortOrder: "desc",
+                    limit: 20,
+                    page: 1,
+                })
                 const { podcasts } = data
                 setPodcasts(podcasts)
             } catch (error) {
