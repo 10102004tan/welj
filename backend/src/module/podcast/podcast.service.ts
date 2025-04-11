@@ -38,9 +38,12 @@ export class PodcastService {
     }
 
     findAll = async (payload: any) => {
-        const { page = 1, limit = 15 } = payload;
+        const { page = 1, limit = 15,sortOrder=-1,sortBy="created_at",select=['-__v','-is_published','-scripts','-is_deleted','-is_draft','-created_at','-updated_at'] } = payload;
         const skip = (page - 1) * limit;
-        const podcasts = await this.podcastModel.find({}).populate('authorId', 'fullname email').select("-__v -is_published -scripts -is_deleted -is_draft -created_at -updated_at").skip(skip).limit(limit).sort({ created_at: -1 }).lean();
+        const podcasts = await this.podcastModel.find().populate('authorId', 'fullname email').select(select.join(" ")).skip(skip).limit(limit)
+            .sort({
+                [sortBy]: sortOrder === "asc" ? 1 : -1
+            }).lean()
         const total = await this.podcastModel.countDocuments({});
         const totalPage = Math.ceil(total / limit);
         const hasNextPage = page < totalPage;
@@ -55,8 +58,8 @@ export class PodcastService {
     }
 
     update = async (payload: any) => {
-        const { id, title, description, thumbnail, audio_url, scripts, is_published, is_draft, published_at, idx_hidden } = payload;
-        const podcast = await this.podcastModel.findByIdAndUpdate(id, {
+        const { podcastId, title, description, thumbnail, audio_url, scripts, is_published, is_draft, published_at, idx_hidden } = payload;
+        const podcast = await this.podcastModel.findByIdAndUpdate(podcastId, {
             title,
             description,
             thumbnail,
@@ -86,6 +89,8 @@ export class PodcastService {
         // check is_completed in result
         let isCompletedResult;
         if (userId){
+            // increase count_listen in podcast
+            await this.podcastModel.findByIdAndUpdate(id, { $inc: { listen_count: 1 } });
             isCompletedResult = await this.resultRepo.findResultOne({ podcastId: podcast._id as string,userId:userId, select: ['is_completed _id list_answers'] });
         }
         return {

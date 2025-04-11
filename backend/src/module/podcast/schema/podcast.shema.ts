@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 import slugify from 'slugify';
+import { Language } from 'src/common/enums/language.enum';
 
 class PodcastScript {
     text: string; // noi dung phat song
@@ -35,6 +36,9 @@ export class Podcast extends Document {
 
     @Prop({default:0})
     listen_count:number; // so luong nghe
+
+    @Prop({default:Language.JA,enum:Language})
+    language: string; // ngon ngu phat song
 
     @Prop({required: true})
     scripts: PodcastScript[]; // noi dung phat song

@@ -6,20 +6,17 @@ const SubtitleSchema = {
     items: {
       type: SchemaType.OBJECT,
       properties: {
-        start: {
-          type: SchemaType.NUMBER,
-          description: 'The start time of the subtitle in seconds.',
-        },
-        end: {
-          type: SchemaType.NUMBER,
-          description: 'The end time of the subtitle in seconds.',
+        timestamp: {
+          type: SchemaType.STRING,
+          description: 'The timestamp of the subtitle. for example 00:00,minute:second',
+          pattern: '^\\d{2}:\\d{2}$', // Regex pattern to match the format "mm:ss",
         },
         text: {
           type: SchemaType.STRING,
           description: 'The text displayed for the subtitle.',
         }
       },
-      required: ['start', 'end', 'text'], // These fields are required
+      required: ['timestamp', 'text'], // These fields are required
     }
 }
 

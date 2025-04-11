@@ -18,6 +18,11 @@ export class GeminiController {
         })
     }
 
+    @Post('generate-script/audio')
+    async generateScriptByAudio() {
+        
+    }
+
     @Get('readAny')
     @UseGuards(AccessGuard)
     @Grant(Action.READ_ANY,"gemini")

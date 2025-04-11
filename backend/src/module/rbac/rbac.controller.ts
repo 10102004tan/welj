@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from "@nestjs/common";
+import { Body, Controller, Get, Param, Post, Put } from "@nestjs/common";
 import { RbacService } from "./rbac.service";
 
 @Controller("rbac")
@@ -25,5 +25,10 @@ export class RbacController {
     @Get("resources")
     async getAllResources() {
         return await this.rbacService.getAllResources();
+    }
+
+    @Put("role")
+    async updateRole(@Body() payload: any) {
+        return await this.rbacService.updateRole(payload);
     }
 }

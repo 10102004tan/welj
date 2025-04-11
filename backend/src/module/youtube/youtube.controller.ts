@@ -12,4 +12,9 @@ export class YoutubeController {
     async downloadVideo(@Param('videoId') videoId: string) {
      return await this.youtubeService.downloadYouTubeVideo(videoId)
     } 
+
+    @Post('download-audio/:videoId')
+    async downloadAudio(@Param('videoId') videoId: string) {
+        return await this.youtubeService.downloadYouTubeAudio(videoId)
+    }
 }

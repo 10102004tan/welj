@@ -7,8 +7,10 @@ import { ResultModule } from './module/result/result.module';
 import { YoutubeModule } from './module/youtube/youtube.module';
 import { GeminiModule } from './module/gemini/gemini.module';
 import { RbacModule } from './module/rbac/rbac.module';
+import { SourcePodcastModule } from './module/sourcePodcast/sourcePodcast.module';
+import { MediaModule } from './module/media/media.module';
 
 @Module({
-  imports: [MongodbModule,AccessModule,SystemModule,PodcastModule,ResultModule,YoutubeModule,GeminiModule,RbacModule],
+  imports: [MongodbModule,AccessModule,SystemModule,PodcastModule,ResultModule,YoutubeModule,GeminiModule,RbacModule,SourcePodcastModule,MediaModule],
 })
 export class AppModule {}

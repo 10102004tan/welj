@@ -9,8 +9,4 @@ import { RbacModule } from "../rbac/rbac.module";
     providers: [GeminiService],
     controllers: [GeminiController],
 })
-export class GeminiModule implements NestModule{
-    configure(consumer: MiddlewareConsumer) {
-        consumer.apply(Authentication).forRoutes(GeminiController);
-    }
-}
+export class GeminiModule {}

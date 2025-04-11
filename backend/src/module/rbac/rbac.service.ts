@@ -113,4 +113,26 @@ export class RbacService {
         }
         return resources;
     }
+
+    /**
+     * update role by slug
+     */
+    async updateRole(payload: any) {
+        const { name, description, status = "active", grants = [] ,slug} = payload;
+        // find role by slug
+        const existingRole = await this.roleModel.findOne({ slug });
+        if (!existingRole) {
+            throw new BadRequestException('Role not found');
+        }
+
+        // update role
+        const role = await this.roleModel.findOneAndUpdate({ slug }, {
+            name,
+            description,
+            status,
+            grants
+        }, { new: true });
+
+        return role;
+    }
 }

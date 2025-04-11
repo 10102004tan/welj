@@ -13,10 +13,11 @@ export class GeminiService {
      * @param input : string - video url
      */
     generateScript = async ({ input }: { input: string }) => {
-        const apiKeyGemini = process.env.GEMINI_API_KEY || 'AIzaSyDCIBynIZgNkeOSPlUomX-gElrRR3xcoA0';
-        const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro-exp-03-25'; // Default model
+        const apiKeyGemini = process.env.GEMINI_API_KEY 
+        // const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro-exp-03-25'; // Default model
+        const MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash'; // Default model
 
-        const prompt = "Transcribe this video. Each subtitle entry should be 1-2 sentences maximum.";
+        const prompt = "Transcribe this video. Each subtitle entry should be 1-2 sentences maximum.Just return the JSON object without any other text.Not include text 'shame' in the response.";
         const model = createModelGemini({
             modelName: MODEL,
             schemaModel: SubtitleSchema,
@@ -30,12 +31,22 @@ export class GeminiService {
         try {
             const result = await model.generateContent([prompt, fileDataPart])
             console.log("res", result.response.text());
-            const regex = /```json|```/g;
+            const regex = /```json|```|shame/g;
             const cleanedText = result.response.text().replace(regex, '');
             return JSON.parse(cleanedText)
         } catch (error) {
             // console.log('error', error)
             throw new Error(`Error generating script: ${error.message}`);
         }
+    }
+
+
+    generateScriptByAudio = async ({ input }: { input: string }) => {
+        const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-pro-exp-03-25'; // Default model
+        const prompt = "Transcribe this video. Each subtitle entry should be 1-2 sentences maximum.";
+        const model = createModelGemini({
+            modelName: MODEL,
+            schemaModel: SubtitleSchema,
+        });
     }
 }
